@@ -1,6 +1,8 @@
-const CLIENT_ID = 'TlhmY2hNaHlCbGFFNTdMRVRLdkc6MTpjaQ';
-const CLIENT_SECRET = 'KLFz3K5E5SVEoSUg3dAik8xQpFd0doJT1IJJu7TTsJOrjPK1q9';
-const REDIRECT_URI = 'https://my-brain.tabuchi-welding.workers.dev/callback';
+// OAuth 1.0a - ログイン不要、直接動作
+const CONSUMER_KEY = 'AwVbYEP0hblISfSyhr0PmgFYb';
+const CONSUMER_SECRET = '0lqIAbL1WtstIP4jguVgAHsUxT5HxQb725KwUQZbo96gLe1sxQ';
+const ACCESS_TOKEN = '1687110196689342464-ySKWicaEpFXhRs8wh60d060Jz4yPdx';
+const ACCESS_TOKEN_SECRET = 'u7Ok4AAXhUA5gW06B8YnAco8Hu26N6p3VYxtdg00lKrTj';
 const FRONT_URL = 'https://tabuchiwelding-png.github.io/my-brain';
 
 export default {
@@ -10,121 +12,66 @@ export default {
     const cors = {
       'Access-Control-Allow-Origin': FRONT_URL,
       'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type,X-Session-Id',
+      'Access-Control-Allow-Headers': 'Content-Type',
     };
     if (request.method === 'OPTIONS') return new Response(null, { headers: cors });
 
-    // /auth
-    if (path === '/auth') {
-      const state = crypto.randomUUID();
-      const cv = genVerifier();
-      const cc = await genChallenge(cv);
-      await env.MYBRAIN_KV.put('s_' + state, cv, { expirationTtl: 600 });
-      const p = new URLSearchParams({
-        response_type: 'code', client_id: CLIENT_ID,
-        redirect_uri: REDIRECT_URI,
-        scope: 'tweet.read tweet.write users.read follows.read like.write offline.access',
-        state, code_challenge: cc, code_challenge_method: 'S256',
-      });
-      return Response.redirect('https://twitter.com/i/oauth2/authorize?' + p, 302);
-    }
-
-    // /callback
-    if (path === '/callback') {
-      const code = url.searchParams.get('code');
-      const state = url.searchParams.get('state');
-      const cv = await env.MYBRAIN_KV.get('s_' + state);
-      if (!cv) return new Response('State error', { status: 400 });
-      const r = await fetch('https://api.twitter.com/2/oauth2/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Authorization': 'Basic ' + btoa(CLIENT_ID + ':' + CLIENT_SECRET) },
-        body: new URLSearchParams({ grant_type: 'authorization_code', code, redirect_uri: REDIRECT_URI, code_verifier: cv }),
-      });
-      const tokens = await r.json();
-      if (!tokens.access_token) return new Response('Token error: ' + JSON.stringify(tokens), { status: 400 });
-      const sid = crypto.randomUUID();
-      await env.MYBRAIN_KV.put('sess_' + sid, JSON.stringify(tokens), { expirationTtl: 7200 });
-      await env.MYBRAIN_KV.delete('s_' + state);
-      return Response.redirect(FRONT_URL + '/?session=' + sid, 302);
-    }
-
     // /me
     if (path === '/me') {
-      const token = await getToken(request, env);
-      if (!token) return new Response('Unauthorized', { status: 401, headers: cors });
-      const r = await fetch('https://api.twitter.com/2/users/me?user.fields=profile_image_url,username,name', {
-        headers: { Authorization: 'Bearer ' + token }
-      });
+      const r = await oauthFetch('GET', 'https://api.twitter.com/2/users/me', { 'user.fields': 'profile_image_url,username,name' });
       const data = await r.json();
       return new Response(JSON.stringify(data), { headers: { ...cors, 'Content-Type': 'application/json' } });
     }
 
     // /timeline
     if (path === '/timeline') {
-      const token = await getToken(request, env);
-      if (!token) return new Response('Unauthorized', { status: 401, headers: cors });
-      const me = await getMe(token);
-      const r = await fetch(
-        'https://api.twitter.com/2/users/' + me + '/timelines/reverse_chronological?max_results=20&tweet.fields=created_at,author_id,public_metrics&expansions=author_id&user.fields=name,username,profile_image_url',
-        { headers: { Authorization: 'Bearer ' + token } }
-      );
+      const me = await getMyId();
+      const r = await oauthFetch('GET', `https://api.twitter.com/2/users/${me}/timelines/reverse_chronological`, {
+        'max_results': '20',
+        'tweet.fields': 'created_at,author_id,public_metrics',
+        'expansions': 'author_id',
+        'user.fields': 'name,username,profile_image_url'
+      });
       const data = await r.json();
       return new Response(JSON.stringify(data), { headers: { ...cors, 'Content-Type': 'application/json' } });
     }
 
     // /tweet
     if (path === '/tweet' && request.method === 'POST') {
-      const token = await getToken(request, env);
-      if (!token) return new Response('Unauthorized', { status: 401, headers: cors });
       const body = await request.json();
-      const r = await fetch('https://api.twitter.com/2/tweets', {
-        method: 'POST',
-        headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: body.text }),
-      });
+      const r = await oauthFetch('POST', 'https://api.twitter.com/2/tweets', {}, body);
       const data = await r.json();
       return new Response(JSON.stringify(data), { headers: { ...cors, 'Content-Type': 'application/json' } });
     }
 
     // /like
     if (path === '/like' && request.method === 'POST') {
-      const token = await getToken(request, env);
-      if (!token) return new Response('Unauthorized', { status: 401, headers: cors });
       const body = await request.json();
-      const me = await getMe(token);
-      const r = await fetch('https://api.twitter.com/2/users/' + me + '/likes', {
-        method: 'POST',
-        headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tweet_id: body.tweetId }),
-      });
+      const me = await getMyId();
+      const r = await oauthFetch('POST', `https://api.twitter.com/2/users/${me}/likes`, {}, { tweet_id: body.tweetId });
       const data = await r.json();
       return new Response(JSON.stringify(data), { headers: { ...cors, 'Content-Type': 'application/json' } });
     }
 
     // /retweet
     if (path === '/retweet' && request.method === 'POST') {
-      const token = await getToken(request, env);
-      if (!token) return new Response('Unauthorized', { status: 401, headers: cors });
       const body = await request.json();
-      const me = await getMe(token);
-      const r = await fetch('https://api.twitter.com/2/users/' + me + '/retweets', {
-        method: 'POST',
-        headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tweet_id: body.tweetId }),
-      });
+      const me = await getMyId();
+      const r = await oauthFetch('POST', `https://api.twitter.com/2/users/${me}/retweets`, {}, { tweet_id: body.tweetId });
       const data = await r.json();
       return new Response(JSON.stringify(data), { headers: { ...cors, 'Content-Type': 'application/json' } });
     }
 
     // /search
     if (path === '/search') {
-      const token = await getToken(request, env);
-      if (!token) return new Response('Unauthorized', { status: 401, headers: cors });
       const q = url.searchParams.get('q') || '';
-      const r = await fetch(
-        'https://api.twitter.com/2/tweets/search/recent?query=' + encodeURIComponent(q) + '&max_results=20&tweet.fields=created_at,author_id,public_metrics&expansions=author_id&user.fields=name,username,profile_image_url',
-        { headers: { Authorization: 'Bearer ' + token } }
-      );
+      const r = await oauthFetch('GET', 'https://api.twitter.com/2/tweets/search/recent', {
+        'query': q,
+        'max_results': '20',
+        'tweet.fields': 'created_at,author_id,public_metrics',
+        'expansions': 'author_id',
+        'user.fields': 'name,username,profile_image_url'
+      });
       const data = await r.json();
       return new Response(JSON.stringify(data), { headers: { ...cors, 'Content-Type': 'application/json' } });
     }
@@ -133,27 +80,71 @@ export default {
   }
 };
 
-async function getToken(request, env) {
-  const sid = request.headers.get('X-Session-Id');
-  if (!sid) return null;
-  const sess = await env.MYBRAIN_KV.get('sess_' + sid);
-  if (!sess) return null;
-  return JSON.parse(sess).access_token;
-}
-
-async function getMe(token) {
-  const r = await fetch('https://api.twitter.com/2/users/me', { headers: { Authorization: 'Bearer ' + token } });
+let cachedMyId = null;
+async function getMyId() {
+  if (cachedMyId) return cachedMyId;
+  const r = await oauthFetch('GET', 'https://api.twitter.com/2/users/me', {});
   const d = await r.json();
-  return d.data?.id;
+  cachedMyId = d.data?.id;
+  return cachedMyId;
 }
 
-function genVerifier() {
-  const a = new Uint8Array(32);
-  crypto.getRandomValues(a);
-  return btoa(String.fromCharCode(...a)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+async function oauthFetch(method, baseUrl, params = {}, body = null) {
+  const oauthParams = {
+    oauth_consumer_key: CONSUMER_KEY,
+    oauth_nonce: crypto.randomUUID().replace(/-/g, ''),
+    oauth_signature_method: 'HMAC-SHA1',
+    oauth_timestamp: Math.floor(Date.now() / 1000).toString(),
+    oauth_token: ACCESS_TOKEN,
+    oauth_version: '1.0',
+  };
+
+  const allParams = method === 'GET' ? { ...params, ...oauthParams } : { ...oauthParams };
+  const sortedParams = Object.keys(allParams).sort().map(k =>
+    `${pct(k)}=${pct(allParams[k])}`
+  ).join('&');
+
+  const baseString = [
+    method.toUpperCase(),
+    pct(baseUrl),
+    pct(sortedParams)
+  ].join('&');
+
+  const signingKey = `${pct(CONSUMER_SECRET)}&${pct(ACCESS_TOKEN_SECRET)}`;
+  const signature = await hmacSha1(signingKey, baseString);
+  oauthParams.oauth_signature = signature;
+
+  const authHeader = 'OAuth ' + Object.keys(oauthParams).sort().map(k =>
+    `${pct(k)}="${pct(oauthParams[k])}"`
+  ).join(', ');
+
+  let fetchUrl = baseUrl;
+  if (method === 'GET' && Object.keys(params).length > 0) {
+    fetchUrl += '?' + Object.keys(params).map(k => `${pct(k)}=${pct(params[k])}`).join('&');
+  }
+
+  const fetchOptions = {
+    method,
+    headers: { 'Authorization': authHeader }
+  };
+
+  if (body && method !== 'GET') {
+    fetchOptions.headers['Content-Type'] = 'application/json';
+    fetchOptions.body = JSON.stringify(body);
+  }
+
+  return fetch(fetchUrl, fetchOptions);
 }
 
-async function genChallenge(v) {
-  const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(v));
-  return btoa(String.fromCharCode(...new Uint8Array(d))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+function pct(str) {
+  return encodeURIComponent(String(str)).replace(/!/g,'%21').replace(/'/g,'%27').replace(/\(/g,'%28').replace(/\)/g,'%29').replace(/\*/g,'%2A');
+}
+
+async function hmacSha1(key, message) {
+  const enc = new TextEncoder();
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw', enc.encode(key), { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']
+  );
+  const sig = await crypto.subtle.sign('HMAC', cryptoKey, enc.encode(message));
+  return btoa(String.fromCharCode(...new Uint8Array(sig)));
 }
