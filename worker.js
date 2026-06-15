@@ -1,4 +1,3 @@
-// OAuth 1.0a - ログイン不要、直接動作
 const CONSUMER_KEY = 'AwVbYEP0hblISfSyhr0PmgFYb';
 const CONSUMER_SECRET = '0lqIAbL1WtstIP4jguVgAHsUxT5HxQb725KwUQZbo96gLe1sxQ';
 const ACCESS_TOKEN = '1687110196689342464-ySKWicaEpFXhRs8wh60d060Jz4yPdx';
@@ -16,17 +15,15 @@ export default {
     };
     if (request.method === 'OPTIONS') return new Response(null, { headers: cors });
 
-    // /me
     if (path === '/me') {
-      const r = await oauthFetch('GET', 'https://api.twitter.com/2/users/me', { 'user.fields': 'profile_image_url,username,name' });
+      const r = await oauthFetch('GET', 'https://api.twitter.com/2/users/me', {'user.fields':'profile_image_url,username,name'});
       const data = await r.json();
       return new Response(JSON.stringify(data), { headers: { ...cors, 'Content-Type': 'application/json' } });
     }
 
-    // /timeline
     if (path === '/timeline') {
       const me = await getMyId();
-      const r = await oauthFetch('GET', `https://api.twitter.com/2/users/${me}/timelines/reverse_chronological`, {
+      const r = await oauthFetch('GET', `https://api.twitter.com/2/users/${me}/tweets`, {
         'max_results': '20',
         'tweet.fields': 'created_at,author_id,public_metrics',
         'expansions': 'author_id',
@@ -36,7 +33,6 @@ export default {
       return new Response(JSON.stringify(data), { headers: { ...cors, 'Content-Type': 'application/json' } });
     }
 
-    // /tweet
     if (path === '/tweet' && request.method === 'POST') {
       const body = await request.json();
       const r = await oauthFetch('POST', 'https://api.twitter.com/2/tweets', {}, body);
@@ -44,7 +40,6 @@ export default {
       return new Response(JSON.stringify(data), { headers: { ...cors, 'Content-Type': 'application/json' } });
     }
 
-    // /like
     if (path === '/like' && request.method === 'POST') {
       const body = await request.json();
       const me = await getMyId();
@@ -53,7 +48,6 @@ export default {
       return new Response(JSON.stringify(data), { headers: { ...cors, 'Content-Type': 'application/json' } });
     }
 
-    // /retweet
     if (path === '/retweet' && request.method === 'POST') {
       const body = await request.json();
       const me = await getMyId();
@@ -62,12 +56,11 @@ export default {
       return new Response(JSON.stringify(data), { headers: { ...cors, 'Content-Type': 'application/json' } });
     }
 
-    // /search
     if (path === '/search') {
       const q = url.searchParams.get('q') || '';
       const r = await oauthFetch('GET', 'https://api.twitter.com/2/tweets/search/recent', {
         'query': q,
-        'max_results': '20',
+        'max_results': '10',
         'tweet.fields': 'created_at,author_id,public_metrics',
         'expansions': 'author_id',
         'user.fields': 'name,username,profile_image_url'
@@ -90,7 +83,7 @@ async function getMyId() {
 }
 
 async function oauthFetch(method, baseUrl, params = {}, body = null) {
-  const oauthParams = {
+  const op = {
     oauth_consumer_key: CONSUMER_KEY,
     oauth_nonce: crypto.randomUUID().replace(/-/g, ''),
     oauth_signature_method: 'HMAC-SHA1',
@@ -98,53 +91,32 @@ async function oauthFetch(method, baseUrl, params = {}, body = null) {
     oauth_token: ACCESS_TOKEN,
     oauth_version: '1.0',
   };
-
-  const allParams = method === 'GET' ? { ...params, ...oauthParams } : { ...oauthParams };
-  const sortedParams = Object.keys(allParams).sort().map(k =>
-    `${pct(k)}=${pct(allParams[k])}`
-  ).join('&');
-
-  const baseString = [
-    method.toUpperCase(),
-    pct(baseUrl),
-    pct(sortedParams)
-  ].join('&');
-
-  const signingKey = `${pct(CONSUMER_SECRET)}&${pct(ACCESS_TOKEN_SECRET)}`;
-  const signature = await hmacSha1(signingKey, baseString);
-  oauthParams.oauth_signature = signature;
-
-  const authHeader = 'OAuth ' + Object.keys(oauthParams).sort().map(k =>
-    `${pct(k)}="${pct(oauthParams[k])}"`
-  ).join(', ');
-
-  let fetchUrl = baseUrl;
+  const ap = method === 'GET' ? { ...params, ...op } : { ...op };
+  const sp = Object.keys(ap).sort().map(k => `${pct(k)}=${pct(ap[k])}`).join('&');
+  const bs = [method.toUpperCase(), pct(baseUrl), pct(sp)].join('&');
+  const sk = `${pct(CONSUMER_SECRET)}&${pct(ACCESS_TOKEN_SECRET)}`;
+  const sig = await hmac(sk, bs);
+  op.oauth_signature = sig;
+  const ah = 'OAuth ' + Object.keys(op).sort().map(k => `${pct(k)}="${pct(op[k])}"`).join(', ');
+  let fu = baseUrl;
   if (method === 'GET' && Object.keys(params).length > 0) {
-    fetchUrl += '?' + Object.keys(params).map(k => `${pct(k)}=${pct(params[k])}`).join('&');
+    fu += '?' + Object.keys(params).map(k => `${pct(k)}=${pct(params[k])}`).join('&');
   }
-
-  const fetchOptions = {
-    method,
-    headers: { 'Authorization': authHeader }
-  };
-
+  const fo = { method, headers: { 'Authorization': ah } };
   if (body && method !== 'GET') {
-    fetchOptions.headers['Content-Type'] = 'application/json';
-    fetchOptions.body = JSON.stringify(body);
+    fo.headers['Content-Type'] = 'application/json';
+    fo.body = JSON.stringify(body);
   }
-
-  return fetch(fetchUrl, fetchOptions);
+  return fetch(fu, fo);
 }
 
-function pct(str) {
-  return encodeURIComponent(String(str)).replace(/!/g,'%21').replace(/'/g,'%27').replace(/\(/g,'%28').replace(/\)/g,'%29').replace(/\*/g,'%2A');
+function pct(s) {
+  return encodeURIComponent(String(s)).replace(/!/g,'%21').replace(/'/g,'%27').replace(/\(/g,'%28').replace(/\)/g,'%29').replace(/\*/g,'%2A');
 }
 
-async function hmacSha1(key, message) {
+async function hmac(key, msg) {
   const enc = new TextEncoder();
-  const cryptoKey = await crypto.subtle.importKey(
-    'raw', enc.encode(key), { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']
-  );
-  const sig = await crypto.subtle.sign('HMAC', cryptoKey, enc.encode(message));
-  return btoa(String.fromCharCode(...new Uint8Array(sig)));
+  const k = await crypto.subtle.importKey('raw', enc.encode(key), { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']);
+  const s = await crypto.subtle.sign('HMAC', k, enc.encode(msg));
+  return btoa(String.fromCharCode(...new Uint8Array(s)));
 }
