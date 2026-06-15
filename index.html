@@ -7,12 +7,10 @@
 <style>
 :root {
   --bg: #000;
-  --bg2: #0a0a0a;
   --surface: #111;
   --surface2: #1a1a1a;
   --border: #2f3336;
   --accent: #1d9bf0;
-  --accent2: #4db5f5;
   --text: #e7e9ea;
   --text2: #71767b;
   --green: #00ba7c;
@@ -22,494 +20,248 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);overflow:hidden;}
 #app{display:flex;flex-direction:column;height:100vh;height:100dvh;}
-
-/* HEADER */
-#header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100;}
-#logo{font-size:20px;font-weight:800;color:var(--text);}
-#user-info{display:flex;align-items:center;gap:8px;}
-#user-avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;}
-#user-name{font-size:13px;font-weight:600;color:var(--text);}
-#login-btn{background:var(--text);color:#000;border:none;border-radius:20px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;min-height:36px;}
-#logout-btn{background:none;border:1px solid var(--border);color:var(--text);border-radius:20px;padding:6px 14px;font-size:12px;cursor:pointer;min-height:32px;}
-
-/* TABS */
+#header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0;background:rgba(0,0,0,0.9);backdrop-filter:blur(12px);}
+#logo{font-size:18px;font-weight:800;}
+#user-bar{display:flex;align-items:center;gap:8px;}
+#user-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;display:none;}
+#user-handle{font-size:12px;color:var(--text2);}
 #tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;}
-.tab{flex:1;padding:14px 4px;text-align:center;font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;min-height:48px;display:flex;align-items:center;justify-content:center;user-select:none;}
+.tab{flex:1;padding:13px 4px;text-align:center;font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;min-height:46px;display:flex;align-items:center;justify-content:center;user-select:none;}
 .tab.active{color:var(--text);border-bottom-color:var(--accent);}
-
-/* MAIN */
 #main{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
 #main::-webkit-scrollbar{display:none;}
 .panel{display:none;}
 .panel.active{display:block;}
-
-/* COMPOSE */
 #compose-wrap{padding:12px 16px;border-bottom:1px solid var(--border);}
 #compose-inner{display:flex;gap:10px;}
-#compose-avatar{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--surface2);}
+#compose-av{width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--surface2);}
 #compose-right{flex:1;}
-#compose-textarea{width:100%;background:none;border:none;outline:none;color:var(--text);font-family:var(--font);font-size:17px;line-height:1.5;resize:none;min-height:52px;padding-top:8px;}
-#compose-textarea::placeholder{color:var(--text2);}
-#compose-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);}
-#char-count{font-size:13px;color:var(--text2);}
-#char-count.warn{color:#ffd700;}
-#char-count.over{color:var(--red);}
-#tweet-btn{background:var(--accent);color:#fff;border:none;border-radius:20px;padding:8px 18px;font-size:14px;font-weight:700;cursor:pointer;min-height:36px;transition:opacity 0.2s;}
-#tweet-btn:disabled{opacity:0.4;cursor:default;}
-#tweet-btn:active{opacity:0.7;}
-
-/* FILTER */
-#filter-bar{display:flex;gap:8px;padding:10px 16px;overflow-x:auto;flex-shrink:0;border-bottom:1px solid var(--border);}
+#compose-ta{width:100%;background:none;border:none;outline:none;color:var(--text);font-family:var(--font);font-size:17px;line-height:1.5;resize:none;min-height:50px;padding-top:6px;}
+#compose-ta::placeholder{color:var(--text2);}
+#compose-bot{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);}
+#cc{font-size:13px;color:var(--text2);}
+#cc.warn{color:#ffd700;}#cc.over{color:var(--red);}
+#post-btn{background:var(--accent);color:#fff;border:none;border-radius:20px;padding:8px 18px;font-size:14px;font-weight:700;cursor:pointer;min-height:36px;}
+#post-btn:disabled{opacity:0.4;}
+#post-btn:active{opacity:0.7;}
+#filter-bar{display:flex;gap:8px;padding:8px 16px;overflow-x:auto;border-bottom:1px solid var(--border);}
 #filter-bar::-webkit-scrollbar{display:none;}
-.filter-chip{font-size:13px;padding:6px 16px;border-radius:20px;border:1px solid var(--border);color:var(--text2);cursor:pointer;white-space:nowrap;min-height:34px;display:flex;align-items:center;transition:all 0.15s;flex-shrink:0;}
-.filter-chip.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;}
-
-/* TIMELINE */
+.fc{font-size:13px;padding:5px 14px;border-radius:20px;border:1px solid var(--border);color:var(--text2);cursor:pointer;white-space:nowrap;min-height:32px;display:flex;align-items:center;flex-shrink:0;transition:all 0.15s;}
+.fc.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;}
 #timeline{padding-bottom:80px;}
-.tweet-item{display:flex;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);animation:fadeIn 0.2s ease;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
-.tweet-avatar{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;}
-.tweet-body{flex:1;min-width:0;}
-.tweet-header{display:flex;align-items:baseline;gap:6px;margin-bottom:4px;flex-wrap:wrap;}
-.tweet-name{font-size:15px;font-weight:700;color:var(--text);}
-.tweet-handle{font-size:14px;color:var(--text2);}
-.tweet-time{font-size:13px;color:var(--text2);margin-left:auto;}
-.tweet-text{font-size:15px;line-height:1.55;color:var(--text);word-break:break-word;white-space:pre-wrap;}
-.tweet-text a{color:var(--accent);text-decoration:none;}
-.tweet-media{margin-top:10px;border-radius:12px;overflow:hidden;border:1px solid var(--border);}
-.tweet-media img{width:100%;display:block;max-height:300px;object-fit:cover;}
-.tweet-actions{display:flex;gap:20px;margin-top:12px;}
-.tweet-action{display:flex;align-items:center;gap:6px;color:var(--text2);font-size:13px;cursor:pointer;min-height:36px;background:none;border:none;padding:0;transition:color 0.15s;}
-.tweet-action:active{color:var(--accent);}
-.tweet-action.liked{color:var(--red);}
-.tweet-action.retweeted{color:var(--green);}
-
-/* LOADING */
-#loading{text-align:center;padding:40px 16px;color:var(--text2);font-size:14px;}
+.ti{display:flex;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);animation:fi 0.2s ease;}
+@keyframes fi{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
+.ta{width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--surface2);}
+.tb{flex:1;min-width:0;}
+.th{display:flex;align-items:baseline;gap:5px;margin-bottom:4px;flex-wrap:wrap;}
+.tn{font-size:15px;font-weight:700;}
+.th2{font-size:13px;color:var(--text2);}
+.tt2{font-size:13px;color:var(--text2);margin-left:auto;}
+.tt{font-size:15px;line-height:1.55;word-break:break-word;white-space:pre-wrap;}
+.tt a{color:var(--accent);text-decoration:none;}
+.tac{display:flex;gap:20px;margin-top:10px;}
+.tab2{display:flex;align-items:center;gap:5px;color:var(--text2);font-size:13px;cursor:pointer;min-height:34px;background:none;border:none;padding:0;transition:color 0.15s;}
+.tab2:active{color:var(--accent);}
+.tab2.liked{color:var(--red);}
+.tab2.rted{color:var(--green);}
+#loading{text-align:center;padding:40px;color:var(--text2);font-size:14px;}
 #empty{text-align:center;padding:48px 16px;color:var(--text2);}
-#empty .icon{font-size:40px;margin-bottom:12px;}
-
-/* LOGIN SCREEN */
-#login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;text-align:center;flex:1;}
-#login-screen .big-logo{font-size:48px;margin-bottom:24px;}
-#login-screen h1{font-size:24px;font-weight:800;margin-bottom:8px;}
-#login-screen p{font-size:15px;color:var(--text2);margin-bottom:32px;line-height:1.6;}
-#login-screen-btn{background:var(--text);color:#000;border:none;border-radius:24px;padding:14px 32px;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:10px;min-height:52px;}
-
-/* TOAST */
+#sp{padding:16px;}
+#sb{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:22px;padding:10px 18px;color:var(--text);font-size:15px;outline:none;font-family:var(--font);min-height:44px;margin-bottom:16px;}
+#sb::placeholder{color:var(--text2);}
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:14px;font-weight:600;padding:10px 20px;border-radius:24px;z-index:1000;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;}
 #toast.show{opacity:1;}
-
-/* SEARCH */
-#search-panel{padding:16px;}
-#search-box{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:10px 18px;color:var(--text);font-size:15px;outline:none;font-family:var(--font);min-height:44px;margin-bottom:16px;}
-#search-box::placeholder{color:var(--text2);}
-
-*{scrollbar-width:none;}
-*::-webkit-scrollbar{display:none;}
+*{scrollbar-width:none;}*::-webkit-scrollbar{display:none;}
 </style>
 </head>
 <body>
 <div id="app">
-
 <div id="header">
   <div id="logo">🧠 My Brain</div>
-  <div id="user-info">
-    <span id="version-badge" style="font-size:10px;color:var(--text2);">v1.0</span>
+  <div id="user-bar">
+    <img id="user-avatar" src="" alt="">
+    <span id="user-handle">v1.1</span>
   </div>
 </div>
-
+<div id="tabs">
+  <div class="tab active" data-tab="home" onclick="switchTab('home')">🏠 ホーム</div>
+  <div class="tab" data-tab="search" onclick="switchTab('search')">🔍 検索</div>
+</div>
 <div id="main">
-
-  <!-- LOGIN SCREEN -->
-  <div id="login-screen">
-    <div class="big-logo">🧠</div>
-    <h1>My Brain</h1>
-    <p>自分だけのXクライアント<br>タイムラインを自分好みに整理する</p>
-    <button id="login-screen-btn" onclick="startLogin()">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-      Xでログイン
-    </button>
-  </div>
-
-  <!-- HOME PANEL -->
-  <div id="panel-home" class="panel" style="display:none;">
+  <div id="panel-home" class="panel active">
     <div id="compose-wrap">
       <div id="compose-inner">
-        <img id="compose-avatar" src="" alt="">
+        <img id="compose-av" src="" alt="">
         <div id="compose-right">
-          <textarea id="compose-textarea" placeholder="いまどうしてる？" rows="2"
-            oninput="onComposeInput()"
-            onkeydown="if(event.key==='Enter'&&event.metaKey)postTweet()"></textarea>
-          <div id="compose-bottom">
-            <span id="char-count">0/280</span>
-            <button id="tweet-btn" onclick="postTweet()" disabled>投稿</button>
+          <textarea id="compose-ta" placeholder="いまどうしてる？" rows="2"
+            oninput="onCI()" onkeydown="if(event.key==='Enter'&&event.metaKey)postTweet()"></textarea>
+          <div id="compose-bot">
+            <span id="cc">0/280</span>
+            <button id="post-btn" onclick="postTweet()" disabled>投稿</button>
           </div>
         </div>
       </div>
     </div>
-
     <div id="filter-bar">
-      <div class="filter-chip active" data-filter="all" onclick="setFilter('all')">すべて</div>
-      <div class="filter-chip" data-filter="following" onclick="setFilter('following')">フォロー中</div>
-      <div class="filter-chip" data-filter="media" onclick="setFilter('media')">メディア</div>
+      <div class="fc active" data-f="all" onclick="setFilter('all')">すべて</div>
+      <div class="fc" data-f="media" onclick="setFilter('media')">メディア</div>
     </div>
-
-    <div id="timeline">
-      <div id="loading">読み込み中…</div>
+    <div id="timeline"><div id="loading">読み込み中…</div></div>
+  </div>
+  <div id="panel-search" class="panel">
+    <div id="sp">
+      <input id="sb" type="search" placeholder="キーワードで検索…" oninput="doSearch()">
+      <div id="sr"></div>
     </div>
   </div>
-
-  <!-- SEARCH PANEL -->
-  <div id="panel-search" class="panel" style="display:none;">
-    <div id="search-panel">
-      <input id="search-box" type="search" placeholder="キーワードで検索…" oninput="doSearch()">
-      <div id="search-results"></div>
-    </div>
-  </div>
-
-</div><!-- /main -->
-
-<!-- TABS (shown only when logged in) -->
-<div id="tabs" style="display:none;">
-  <div class="tab active" data-tab="home" onclick="switchTab('home')">🏠 ホーム</div>
-  <div class="tab" data-tab="search" onclick="switchTab('search')">🔍 検索</div>
 </div>
-
-</div><!-- /app -->
-
+</div>
 <div id="toast"></div>
-
 <script>
-/* ===== CONSTANTS ===== */
-const APP_VERSION = '1.0';
-const WORKER_URL = 'https://my-brain.tabuchi-welding.workers.dev';
-const SESSION_KEY = 'mybrain_session_v1';
-const MAX_CHARS = 280;
+const WORKER = 'https://my-brain.tabuchi-welding.workers.dev';
+const MAX = 280;
+let tweets = [], filter = 'all';
 
-/* ===== STATE ===== */
-let sessionId = null;
-let myUser = null;
-let tweets = [];
-let currentFilter = 'all';
-let currentTab = 'home';
-
-/* ===== INIT ===== */
 async function init() {
-  // check callback
-  const params = new URLSearchParams(location.search);
-  const sid = params.get('session');
-  if (sid) {
-    localStorage.setItem(SESSION_KEY, sid);
-    history.replaceState({}, '', location.pathname);
-  }
-
-  sessionId = localStorage.getItem(SESSION_KEY);
-  if (sessionId) {
-    await loadUser();
-    if (myUser) {
-      showApp();
-      loadTimeline();
-    } else {
-      showLogin();
-    }
-  } else {
-    showLogin();
-  }
-}
-
-/* ===== AUTH ===== */
-function startLogin() {
-  location.href = WORKER_URL + '/auth';
-}
-
-function logout() {
-  localStorage.removeItem(SESSION_KEY);
-  sessionId = null;
-  myUser = null;
-  tweets = [];
-  showLogin();
-}
-
-async function loadUser() {
   try {
-    const res = await fetch(WORKER_URL + '/me', {
-      headers: { 'X-Session-Id': sessionId }
-    });
-    if (!res.ok) { sessionId = null; return; }
-    const data = await res.json();
-    myUser = data.data;
-  } catch(e) {
-    sessionId = null;
-  }
-}
-
-/* ===== UI ===== */
-function showLogin() {
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('panel-home').style.display = 'none';
-  document.getElementById('panel-search').style.display = 'none';
-  document.getElementById('tabs').style.display = 'none';
-  document.getElementById('user-info').innerHTML = `<span style="font-size:10px;color:var(--text2);">v${APP_VERSION}</span>`;
-}
-
-function showApp() {
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('tabs').style.display = 'flex';
-  switchTab('home');
-
-  // user info in header
-  const avatar = myUser.profile_image_url || '';
-  document.getElementById('user-info').innerHTML = `
-    <img src="${avatar}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;">
-    <span style="font-size:13px;font-weight:600;">@${myUser.username}</span>
-    <button onclick="logout()" style="background:none;border:1px solid var(--border);color:var(--text2);border-radius:16px;padding:4px 10px;font-size:11px;cursor:pointer;min-height:28px;">ログアウト</button>
-  `;
-
-  // compose avatar
-  const ca = document.getElementById('compose-avatar');
-  if (ca && avatar) ca.src = avatar;
+    const r = await fetch(WORKER + '/me');
+    const d = await r.json();
+    if (d.data) {
+      const u = d.data;
+      const av = u.profile_image_url || '';
+      document.getElementById('user-handle').textContent = '@' + u.username;
+      if (av) {
+        const img = document.getElementById('user-avatar');
+        img.src = av; img.style.display = 'block';
+        document.getElementById('compose-av').src = av;
+      }
+    }
+  } catch(e) {}
+  loadTimeline();
 }
 
 function switchTab(tab) {
-  currentTab = tab;
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-  document.getElementById('panel-home').style.display = tab === 'home' ? 'block' : 'none';
-  document.getElementById('panel-search').style.display = tab === 'search' ? 'block' : 'none';
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + tab));
 }
 
-/* ===== TIMELINE ===== */
 async function loadTimeline() {
   const tl = document.getElementById('timeline');
   tl.innerHTML = '<div id="loading">読み込み中…</div>';
-
   try {
-    const res = await fetch(WORKER_URL + '/timeline', {
-      headers: { 'X-Session-Id': sessionId }
-    });
-    const data = await res.json();
-
-    if (data.errors) {
-      tl.innerHTML = `<div id="empty"><div class="icon">⚠️</div><p>${data.errors[0].message}</p></div>`;
-      return;
-    }
-
-    tweets = data.data || [];
+    const r = await fetch(WORKER + '/timeline');
+    const d = await r.json();
+    if (d.errors) { tl.innerHTML = `<div id="empty">⚠️ ${d.errors[0].message}</div>`; return; }
+    tweets = d.data || [];
     const users = {};
-    if (data.includes?.users) {
-      data.includes.users.forEach(u => users[u.id] = u);
-    }
-    tweets._users = users;
-
-    renderTimeline();
+    (d.includes?.users || []).forEach(u => users[u.id] = u);
+    tweets._u = users;
+    renderTL();
   } catch(e) {
-    tl.innerHTML = '<div id="empty"><div class="icon">⚠️</div><p>読み込みに失敗しました</p></div>';
+    tl.innerHTML = '<div id="empty">⚠️ 読み込みに失敗しました</div>';
   }
 }
 
-function setFilter(filter) {
-  currentFilter = filter;
-  document.querySelectorAll('.filter-chip').forEach(c => c.classList.toggle('active', c.dataset.filter === filter));
-  renderTimeline();
+function setFilter(f) {
+  filter = f;
+  document.querySelectorAll('.fc').forEach(c => c.classList.toggle('active', c.dataset.f === f));
+  renderTL();
 }
 
-function renderTimeline() {
+function renderTL() {
   const tl = document.getElementById('timeline');
-  if (!tweets.length) {
-    tl.innerHTML = '<div id="empty"><div class="icon">🐦</div><p>ツイートがありません</p></div>';
-    return;
-  }
-
-  let filtered = tweets;
-  if (currentFilter === 'media') {
-    filtered = tweets.filter(t => t.attachments?.media_keys?.length > 0);
-  }
-
-  const users = tweets._users || {};
-  tl.innerHTML = filtered.map(t => renderTweet(t, users)).join('');
+  let list = filter === 'media' ? tweets.filter(t => t.attachments) : tweets;
+  if (!list.length) { tl.innerHTML = '<div id="empty">ツイートがありません</div>'; return; }
+  tl.innerHTML = list.map(t => renderT(t, tweets._u || {})).join('');
 }
 
-function renderTweet(t, users) {
-  const author = users[t.author_id] || {};
-  const name = author.name || 'Unknown';
-  const handle = author.username || '';
-  const avatar = author.profile_image_url || '';
-  const timeStr = formatTime(t.created_at);
-  const metrics = t.public_metrics || {};
-
-  const textHtml = escapeHtml(t.text)
-    .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>')
-    .replace(/#(\w+)/g, '<a href="https://x.com/hashtag/$1" target="_blank">#$1</a>')
-    .replace(/@(\w+)/g, '<a href="https://x.com/$1" target="_blank">@$1</a>');
-
-  return `
-  <div class="tweet-item" id="tw-${t.id}">
-    <img class="tweet-avatar" src="${avatar}" onerror="this.src=''">
-    <div class="tweet-body">
-      <div class="tweet-header">
-        <span class="tweet-name">${escapeHtml(name)}</span>
-        <span class="tweet-handle">@${escapeHtml(handle)}</span>
-        <span class="tweet-time">${timeStr}</span>
+function renderT(t, users) {
+  const a = users[t.author_id] || {};
+  const m = t.public_metrics || {};
+  const txt = esc(t.text)
+    .replace(/(https?:\/\/[^\s]+)/g,'<a href="$1" target="_blank">$1</a>')
+    .replace(/#(\w+)/g,'<a href="https://x.com/hashtag/$1" target="_blank">#$1</a>');
+  return `<div class="ti" id="tw-${t.id}">
+    <img class="ta" src="${a.profile_image_url||''}" onerror="this.style.display='none'">
+    <div class="tb">
+      <div class="th">
+        <span class="tn">${esc(a.name||'')}</span>
+        <span class="th2">@${esc(a.username||'')}</span>
+        <span class="tt2">${ft(t.created_at)}</span>
       </div>
-      <div class="tweet-text">${textHtml}</div>
-      <div class="tweet-actions">
-        <button class="tweet-action" onclick="likeTweet('${t.id}',this)">
-          ♥ ${metrics.like_count || 0}
-        </button>
-        <button class="tweet-action" onclick="retweetTweet('${t.id}',this)">
-          🔁 ${metrics.retweet_count || 0}
-        </button>
-        <button class="tweet-action" onclick="replyToTweet('${t.id}','${escapeHtml(handle)}')">
-          💬 返信
-        </button>
+      <div class="tt">${txt}</div>
+      <div class="tac">
+        <button class="tab2" onclick="like('${t.id}',this)">♥ ${m.like_count||0}</button>
+        <button class="tab2" onclick="rt('${t.id}',this)">🔁 ${m.retweet_count||0}</button>
+        <button class="tab2" onclick="reply('${esc(a.username||'')}')">💬 返信</button>
       </div>
     </div>
   </div>`;
 }
 
-/* ===== COMPOSE ===== */
-function onComposeInput() {
-  const ta = document.getElementById('compose-textarea');
-  const len = ta.value.length;
-  const cc = document.getElementById('char-count');
-  cc.textContent = len + '/' + MAX_CHARS;
-  cc.className = len > MAX_CHARS ? 'over' : len > MAX_CHARS * 0.8 ? 'warn' : '';
-  document.getElementById('tweet-btn').disabled = len === 0 || len > MAX_CHARS;
-  ta.style.height = 'auto';
-  ta.style.height = Math.max(52, ta.scrollHeight) + 'px';
+function onCI() {
+  const ta = document.getElementById('compose-ta');
+  const l = ta.value.length;
+  const cc = document.getElementById('cc');
+  cc.textContent = l+'/'+MAX;
+  cc.className = l>MAX?'over':l>MAX*0.8?'warn':'';
+  document.getElementById('post-btn').disabled = l===0||l>MAX;
+  ta.style.height='auto'; ta.style.height=Math.max(50,ta.scrollHeight)+'px';
 }
 
 async function postTweet() {
-  const ta = document.getElementById('compose-textarea');
+  const ta = document.getElementById('compose-ta');
   const text = ta.value.trim();
-  if (!text || text.length > MAX_CHARS) return;
-
-  const btn = document.getElementById('tweet-btn');
-  btn.disabled = true;
-  btn.textContent = '投稿中…';
-
+  if (!text||text.length>MAX) return;
+  const btn = document.getElementById('post-btn');
+  btn.disabled=true; btn.textContent='投稿中…';
   try {
-    const res = await fetch(WORKER_URL + '/tweet', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Session-Id': sessionId },
-      body: JSON.stringify({ text })
-    });
-    const data = await res.json();
-    if (data.data) {
-      ta.value = '';
-      ta.style.height = 'auto';
-      document.getElementById('char-count').textContent = '0/' + MAX_CHARS;
-      showToast('✓ 投稿しました');
-      setTimeout(() => loadTimeline(), 1000);
-    } else {
-      showToast('⚠️ 投稿に失敗しました');
-    }
-  } catch(e) {
-    showToast('⚠️ 通信エラー');
-  }
-
-  btn.textContent = '投稿';
-  btn.disabled = false;
+    const r = await fetch(WORKER+'/tweet',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
+    const d = await r.json();
+    if (d.data) { ta.value=''; ta.style.height='auto'; document.getElementById('cc').textContent='0/'+MAX; showToast('✓ 投稿しました'); setTimeout(loadTimeline,1500); }
+    else showToast('⚠️ 投稿失敗');
+  } catch(e){showToast('⚠️ エラー');}
+  btn.textContent='投稿'; btn.disabled=false;
 }
 
-/* ===== LIKE ===== */
-async function likeTweet(tweetId, btn) {
+async function like(id,btn) {
   btn.classList.toggle('liked');
-  try {
-    await fetch(WORKER_URL + '/like', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Session-Id': sessionId },
-      body: JSON.stringify({ tweetId })
-    });
-    showToast('♥ いいねしました');
-  } catch(e) {}
+  try { await fetch(WORKER+'/like',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tweetId:id})}); showToast('♥ いいね'); } catch(e){}
 }
 
-/* ===== RETWEET ===== */
-async function retweetTweet(tweetId, btn) {
-  btn.classList.toggle('retweeted');
-  try {
-    await fetch(WORKER_URL + '/retweet', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Session-Id': sessionId },
-      body: JSON.stringify({ tweetId })
-    });
-    showToast('🔁 リツイートしました');
-  } catch(e) {}
+async function rt(id,btn) {
+  btn.classList.toggle('rted');
+  try { await fetch(WORKER+'/retweet',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tweetId:id})}); showToast('🔁 RT'); } catch(e){}
 }
 
-/* ===== REPLY ===== */
-function replyToTweet(tweetId, handle) {
-  const ta = document.getElementById('compose-textarea');
-  ta.value = `@${handle} `;
-  ta.focus();
+function reply(handle) {
+  const ta = document.getElementById('compose-ta');
+  ta.value='@'+handle+' '; ta.focus();
   switchTab('home');
-  document.getElementById('main').scrollTo(0, 0);
-  onComposeInput();
+  document.getElementById('main').scrollTo(0,0);
+  onCI();
 }
 
-/* ===== SEARCH ===== */
 async function doSearch() {
-  const q = document.getElementById('search-box').value.trim();
-  const results = document.getElementById('search-results');
-  if (!q) { results.innerHTML = ''; return; }
-
-  results.innerHTML = '<div style="color:var(--text2);font-size:14px;padding:16px 0;">検索中…</div>';
-
+  const q = document.getElementById('sb').value.trim();
+  const sr = document.getElementById('sr');
+  if (!q) { sr.innerHTML=''; return; }
+  sr.innerHTML='<div style="color:var(--text2);padding:16px 0;">検索中…</div>';
   try {
-    const res = await fetch(`${WORKER_URL}/search?q=${encodeURIComponent(q)}`, {
-      headers: { 'X-Session-Id': sessionId }
-    });
-    const data = await res.json();
-    const tweets = data.data || [];
-    const users = {};
-    if (data.includes?.users) data.includes.users.forEach(u => users[u.id] = u);
-
-    if (!tweets.length) {
-      results.innerHTML = '<div style="color:var(--text2);font-size:14px;padding:16px 0;">見つかりませんでした</div>';
-      return;
-    }
-    results.innerHTML = tweets.map(t => renderTweet(t, users)).join('');
-  } catch(e) {
-    results.innerHTML = '<div style="color:var(--text2);font-size:14px;">エラーが発生しました</div>';
-  }
+    const r = await fetch(WORKER+'/search?q='+encodeURIComponent(q));
+    const d = await r.json();
+    const list = d.data||[];
+    const users={};
+    (d.includes?.users||[]).forEach(u=>users[u.id]=u);
+    sr.innerHTML = list.length ? list.map(t=>renderT(t,users)).join('') : '<div style="color:var(--text2);padding:16px 0;">見つかりません</div>';
+  } catch(e){sr.innerHTML='<div style="color:var(--text2);">エラー</div>';}
 }
 
-/* ===== UTILS ===== */
-function escapeHtml(s) {
-  if (!s) return '';
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-function formatTime(iso) {
-  if (!iso) return '';
-  const d = new Date(iso);
-  const now = new Date();
-  const diff = (now - d) / 1000;
-  if (diff < 60) return 'たった今';
-  if (diff < 3600) return Math.floor(diff/60) + '分前';
-  if (diff < 86400) return Math.floor(diff/3600) + '時間前';
-  return (d.getMonth()+1) + '/' + d.getDate();
-}
-
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
-}
-
-/* ===== VERSION CHECK ===== */
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden) {
-    const v = localStorage.getItem('mybrain_html_version');
-    if (v && v !== APP_VERSION) showToast('🆕 更新されました');
-    localStorage.setItem('mybrain_html_version', APP_VERSION);
-  }
-});
+function esc(s){if(!s)return'';return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function ft(iso){if(!iso)return'';const d=new Date(iso),now=new Date(),df=(now-d)/1000;if(df<60)return'今';if(df<3600)return Math.floor(df/60)+'分前';if(df<86400)return Math.floor(df/3600)+'時間前';return(d.getMonth()+1)+'/'+(d.getDate());}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
 
 init();
 </script>
 </body>
 </html>
-
