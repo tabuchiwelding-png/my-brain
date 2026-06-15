@@ -10,8 +10,109 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
     const cors = {
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': FRONT_URL,
       'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
     };
-    if (request.method === 'OPTIONS') return new Response(null, {
+    if (request.method === 'OPTIONS') return new Response(null, {headers: cors});
+
+    if (path === '/me') {
+      const r = await go('GET', 'https://api.twitter.com/2/users/me', {'user.fields':'profile_image_url,username,name'});
+      return new Response(await r.text(), {headers: {...cors, 'Content-Type': 'application/json'}});
+    }
+
+    if (path === '/timeline') {
+      const r = await go('GET', `https://api.twitter.com/2/users/${MY_ID}/tweets`, {
+        'max_results':'20',
+        'tweet.fields':'created_at,author_id,public_metrics',
+        'expansions':'author_id',
+        'user.fields':'name,username,profile_image_url'
+      });
+      return new Response(await r.text(), {headers: {...cors, 'Content-Type': 'application/json'}});
+    }
+
+    if (path === '/tweet' && request.method === 'POST') {
+      const b = await request.json();
+      const r = await go('POST', 'https://api.twitter.com/2/tweets', {}, JSON.stringify(b));
+      return new Response(await r.text(), {headers: {...cors, 'Content-Type': 'application/json'}});
+    }
+
+    if (path === '/like' && request.method === 'POST') {
+      const b = await request.json();
+      const r = await go('POST', `https://api.twitter.com/2/users/${MY_ID}/likes`, {}, JSON.stringify({tweet_id: b.tweetId}));
+      return new Response(await r.text(), {headers: {...cors, 'Content-Type': 'application/json'}});
+    }
+
+    if (path === '/search') {
+      const q = url.searchParams.get('q') || '';
+      const r = await go('GET', 'https://api.twitter.com/2/tweets/search/recent', {
+        'query': q,
+        'max_results': '10',
+        'tweet.fields': 'created_at,author_id,public_metrics',
+        'expansions': 'author_id',
+        'user.fields': 'name,username,profile_image_url'
+      });
+      return new Response(await r.text(), {headers: {...cors, 'Content-Type': 'application/json'}});
+    }
+
+    return new Response('Not found', {status: 404});
+  }
+};
+
+async function go(method, baseUrl, qp, body) {
+  qp = qp || {};
+  const op = {
+    oauth_consumer_key: CONSUMER_KEY,
+    oauth_nonce: nonce(),
+    oauth_signature_method: 'HMAC-SHA1',
+    oauth_timestamp: ts(),
+    oauth_token: ACCESS_TOKEN,
+    oauth_version: '1.0',
+  };
+  const all = Object.assign({}, qp, op);
+  const ps = Object.keys(all).sort().map(k => e(k) + '=' + e(all[k])).join('&');
+  const sb = method + '&' + e(baseUrl) + '&' + e(ps);
+  const sk = e(CONSUMER_SECRET) + '&' + e(ACCESS_TOKEN_SECRET);
+  op.oauth_signature = await sign(sk, sb);
+  const ah = 'OAuth ' + Object.keys(op).sort().map(k => e(k) + '="' + e(op[k]) + '"').join(', ');
+  let fu = baseUrl;
+  if (method === 'GET' && Object.keys(qp).length) {
+    fu += '?' + Object.keys(qp).map(k => e(k) + '=' + e(qp[k])).join('&');
+  }
+  const opt = {method: method, headers: {Authorization: ah}};
+  if (body) {
+    opt.headers['Content-Type'] = 'application/json';
+    opt.body = body;
+  }
+  return fetch(fu, opt);
+}
+
+function e(s) {
+  return encodeURIComponent(String(s))
+    .replace(/!/g,'%21').replace(/'/g,'%27')
+    .replace(/\(/g,'%28').replace(/\)/g,'%29').replace(/\*/g,'%2A');
+}
+
+function nonce() {
+  const a = new Uint8Array(16);
+  crypto.getRandomValues(a);
+  return Array.from(a).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+function ts() {
+  return Math.floor(Date.now() / 1000).toString();
+}
+
+async function sign(key, msg) {
+  const enc = new TextEncoder();
+  const k = await crypto.subtle.importKey(
+    'raw', enc.encode(key),
+    {name: 'HMAC', hash: 'SHA-1'},
+    false, ['sign']
+  );
+  const s = await crypto.subtle.sign('HMAC', k, enc.encode(msg));
+  const b = new Uint8Array(s);
+  let r = '';
+  for (let i = 0; i < b.length; i++) r += String.fromCharCode(b[i]);
+  return btoa(r);
+}
