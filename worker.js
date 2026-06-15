@@ -1,7 +1,6 @@
-const BEARER_TOKEN = 'AAAAAAAAAAAAAAAAAAAALWS%2BAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlws%2BAEAAAAA5FCKASPX3vXP8cXxHuaaDvgKGnE%3DJPlklhsAv6DLku769AmGvEQd4dVljHgREhMRREfovRwDbvVRTW';
-const ACCESS_TOKEN = '1687110196689342464-ySKWicaEpFXhRs8wh60d060Jz4yPdx';
 const CONSUMER_KEY = 'AwVbYEP0hblISfSyhr0PmgFYb';
 const CONSUMER_SECRET = '0lqIAbL1WtstIP4jguVgAHsUxT5HxQb725KwUQZbo96gLe1sxQ';
+const ACCESS_TOKEN = '1687110196689342464-ySKWicaEpFXhRs8wh60d060Jz4yPdx';
 const ACCESS_TOKEN_SECRET = 'u7Ok4AAXhUA5gW06B8YnAco8Hu26N6p3VYxtdg00lKrTj';
 const FRONT_URL = 'https://tabuchiwelding-png.github.io/my-brain';
 const MY_ID = '1687110196689342464';
@@ -15,87 +14,100 @@ export default {
       'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
     };
-    if (request.method === 'OPTIONS') return new Response(null, { headers: cors });
+    if (request.method === 'OPTIONS') return new Response(null, {headers: cors});
 
     if (path === '/me') {
-      const r = await bFetch('GET', 'https://api.twitter.com/2/users/me?user.fields=profile_image_url,username,name');
-      const data = await r.json();
-      return new Response(JSON.stringify(data), { headers: { ...cors, 'Content-Type': 'application/json' } });
+      const apiUrl = 'https://api.twitter.com/2/users/me';
+      const params = {'user.fields': 'profile_image_url,username,name'};
+      const r = await oAuth1Fetch('GET', apiUrl, params);
+      return new Response(await r.text(), {headers: {...cors, 'Content-Type': 'application/json'}});
     }
 
     if (path === '/timeline') {
-      const r = await bFetch('GET', `https://api.twitter.com/2/users/${MY_ID}/tweets?max_results=20&tweet.fields=created_at,author_id,public_metrics&expansions=author_id&user.fields=name,username,profile_image_url`);
-      const data = await r.json();
-      return new Response(JSON.stringify(data), { headers: { ...cors, 'Content-Type': 'application/json' } });
+      const apiUrl = `https://api.twitter.com/2/users/${MY_ID}/tweets`;
+      const params = {'max_results':'20','tweet.fields':'created_at,author_id,public_metrics','expansions':'author_id','user.fields':'name,username,profile_image_url'};
+      const r = await oAuth1Fetch('GET', apiUrl, params);
+      return new Response(await r.text(), {headers: {...cors, 'Content-Type': 'application/json'}});
     }
 
     if (path === '/tweet' && request.method === 'POST') {
       const body = await request.json();
-      const r = await oFetch('POST', 'https://api.twitter.com/2/tweets', {}, body);
-      const data = await r.json();
-      return new Response(JSON.stringify(data), { headers: { ...cors, 'Content-Type': 'application/json' } });
+      const r = await oAuth1Fetch('POST', 'https://api.twitter.com/2/tweets', {}, JSON.stringify(body));
+      return new Response(await r.text(), {headers: {...cors, 'Content-Type': 'application/json'}});
     }
 
     if (path === '/like' && request.method === 'POST') {
       const body = await request.json();
-      const r = await oFetch('POST', `https://api.twitter.com/2/users/${MY_ID}/likes`, {}, { tweet_id: body.tweetId });
-      const data = await r.json();
-      return new Response(JSON.stringify(data), { headers: { ...cors, 'Content-Type': 'application/json' } });
-    }
-
-    if (path === '/retweet' && request.method === 'POST') {
-      const body = await request.json();
-      const r = await oFetch('POST', `https://api.twitter.com/2/users/${MY_ID}/retweets`, {}, { tweet_id: body.tweetId });
-      const data = await r.json();
-      return new Response(JSON.stringify(data), { headers: { ...cors, 'Content-Type': 'application/json' } });
+      const r = await oAuth1Fetch('POST', `https://api.twitter.com/2/users/${MY_ID}/likes`, {}, JSON.stringify({tweet_id: body.tweetId}));
+      return new Response(await r.text(), {headers: {...cors, 'Content-Type': 'application/json'}});
     }
 
     if (path === '/search') {
       const q = url.searchParams.get('q') || '';
-      const r = await bFetch('GET', `https://api.twitter.com/2/tweets/search/recent?query=${encodeURIComponent(q)}&max_results=10&tweet.fields=created_at,author_id,public_metrics&expansions=author_id&user.fields=name,username,profile_image_url`);
-      const data = await r.json();
-      return new Response(JSON.stringify(data), { headers: { ...cors, 'Content-Type': 'application/json' } });
+      const apiUrl = 'https://api.twitter.com/2/tweets/search/recent';
+      const params = {'query':q,'max_results':'10','tweet.fields':'created_at,author_id,public_metrics','expansions':'author_id','user.fields':'name,username,profile_image_url'};
+      const r = await oAuth1Fetch('GET', apiUrl, params);
+      return new Response(await r.text(), {headers: {...cors, 'Content-Type': 'application/json'}});
     }
 
-    return new Response('Not found', { status: 404 });
+    return new Response('Not found', {status: 404});
   }
 };
 
-async function bFetch(method, url) {
-  return fetch(url, {
-    method,
-    headers: { 'Authorization': 'Bearer ' + decodeURIComponent(BEARER_TOKEN) }
-  });
-}
-
-async function oFetch(method, baseUrl, params = {}, body = null) {
-  const op = {
+async function oAuth1Fetch(method, baseUrl, queryParams = {}, body = null) {
+  const oauthParams = {
     oauth_consumer_key: CONSUMER_KEY,
-    oauth_nonce: crypto.randomUUID().replace(/-/g, ''),
+    oauth_nonce: Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b => b.toString(16).padStart(2,'0')).join(''),
     oauth_signature_method: 'HMAC-SHA1',
     oauth_timestamp: Math.floor(Date.now() / 1000).toString(),
     oauth_token: ACCESS_TOKEN,
     oauth_version: '1.0',
   };
-  const ap = { ...params, ...op };
-  const sp = Object.keys(ap).sort().map(k => `${pct(k)}=${pct(ap[k])}`).join('&');
-  const bs = [method.toUpperCase(), pct(baseUrl), pct(sp)].join('&');
-  const sk = `${pct(CONSUMER_SECRET)}&${pct(ACCESS_TOKEN_SECRET)}`;
-  const sig = await hmac(sk, bs);
-  op.oauth_signature = sig;
-  const ah = 'OAuth ' + Object.keys(op).sort().map(k => `${pct(k)}="${pct(op[k])}"`).join(', ');
-  const fo = { method, headers: { 'Authorization': ah } };
-  if (body) { fo.headers['Content-Type'] = 'application/json'; fo.body = JSON.stringify(body); }
-  return fetch(baseUrl, fo);
+
+  const sigParams = method === 'GET' ? {...queryParams, ...oauthParams} : {...oauthParams};
+  const paramStr = Object.keys(sigParams).sort()
+    .map(k => `${rfc3986(k)}=${rfc3986(sigParams[k])}`)
+    .join('&');
+
+  const sigBase = `${method}&${rfc3986(baseUrl)}&${rfc3986(paramStr)}`;
+  const sigKey = `${rfc3986(CONSUMER_SECRET)}&${rfc3986(ACCESS_TOKEN_SECRET)}`;
+  const signature = await hmacSha1Base64(sigKey, sigBase);
+  oauthParams.oauth_signature = signature;
+
+  const authHeader = 'OAuth ' + Object.keys(oauthParams).sort()
+    .map(k => `${rfc3986(k)}="${rfc3986(oauthParams[k])}"`)
+    .join(', ');
+
+  let finalUrl = baseUrl;
+  if (method === 'GET' && Object.keys(queryParams).length > 0) {
+    finalUrl += '?' + Object.keys(queryParams).map(k => `${rfc3986(k)}=${rfc3986(queryParams[k])}`).join('&');
+  }
+
+  const fetchOpts = {method, headers: {'Authorization': authHeader}};
+  if (body) {
+    fetchOpts.headers['Content-Type'] = 'application/json';
+    fetchOpts.body = body;
+  }
+
+  return fetch(finalUrl, fetchOpts);
 }
 
-function pct(s) {
-  return encodeURIComponent(String(s)).replace(/!/g,'%21').replace(/'/g,'%27').replace(/\(/g,'%28').replace(/\)/g,'%29').replace(/\*/g,'%2A');
+function rfc3986(str) {
+  return encodeURIComponent(String(str))
+    .replace(/!/g,'%21').replace(/'/g,'%27').replace(/\(/g,'%28')
+    .replace(/\)/g,'%29').replace(/\*/g,'%2A');
 }
 
-async function hmac(key, msg) {
+async function hmacSha1Base64(key, message) {
   const enc = new TextEncoder();
-  const k = await crypto.subtle.importKey('raw', enc.encode(key), { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']);
-  const s = await crypto.subtle.sign('HMAC', k, enc.encode(msg));
-  return btoa(String.fromCharCode(...new Uint8Array(s)));
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw', enc.encode(key),
+    {name: 'HMAC', hash: {name: 'SHA-1'}},
+    false, ['sign']
+  );
+  const signature = await crypto.subtle.sign('HMAC', cryptoKey, enc.encode(message));
+  const bytes = new Uint8Array(signature);
+  let binary = '';
+  for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
 }
