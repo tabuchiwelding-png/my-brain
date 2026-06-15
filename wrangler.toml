@@ -1,0 +1,7 @@
+name = "my-brain"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+[[kv_namespaces]]
+binding = "MYBRAIN_KV"
+id = "755335a0c0124d73a256ff0586bd6a22"
