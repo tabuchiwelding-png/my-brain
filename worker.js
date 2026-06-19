@@ -1,7 +1,7 @@
-const CONSUMER_KEY = 'x8Yc5q603mpkW2zjlJIFp9Fko';
-const CONSUMER_SECRET = '3moxxOkLwbkZqunZiSyjNIMpxdv65zeIkrzBVtJt4ilnFM60qM';
-const ACCESS_TOKEN = '1687110196689342464-blVyKpkRBGZKMw9m5o5T1qyiPMU16z';
-const ACCESS_TOKEN_SECRET = '1t5cPfjdIJu76P1s2t6370sjF2iQCy07fjJbzyGu9l7U5';
+const CONSUMER_KEY = '3i9k5BMivReaN1lae8n1uqfhm';
+const CONSUMER_SECRET = 'Akf5tOIwBddZWonz42HKdme47ZtwN11Ajm89gcCpxvs7nIAonC';
+const ACCESS_TOKEN = '1687110196689342464-z9ehfvnwLuE1wDEQcHHCe350AAjQpy';
+const ACCESS_TOKEN_SECRET = 'i92MJqseUGryidcbcud45xeiyTZCSc9b08JQZeCfdN52k';
 const FRONT_URL = 'https://tabuchiwelding-png.github.io/my-brain';
 const MY_ID = '1687110196689342464';
 
@@ -17,7 +17,8 @@ export default {
     if (request.method === 'OPTIONS') return new Response(null, {headers: cors});
 
     if (path === '/me') {
-      const r = await go('GET', 'https://api.twitter.com/2/users/me', {});
+      const params = {'user.fields': 'profile_image_url,username,name'};
+      const r = await go('GET', 'https://api.twitter.com/2/users/me', params);
       const text = await r.text();
       return new Response(text, {headers: {...cors, 'Content-Type': 'application/json'}});
     }
