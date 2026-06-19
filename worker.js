@@ -1,7 +1,7 @@
-const CONSUMER_KEY = 'AwVbYEP0hblISfSyhr0PmgFYb';
-const CONSUMER_SECRET = '0lqIAbL1WtstIP4jguVgAHsUxT5HxQb725KwUQZbo96gLe1sxQ';
-const ACCESS_TOKEN = '1687110196689342464-qXd56tnuq3uBo7MRlhtzkFkP6IwM2R';
-const ACCESS_TOKEN_SECRET = 'DK3a5Hwvo9ToB7rPpiRQGfaiYSbvrmEAeZ0LXYva66V5D';
+const CONSUMER_KEY = 'x8Yc5q603mpkW2zjlJIFp9Fko';
+const CONSUMER_SECRET = '3moxxOkLwbkZqunZiSyjNIMpxdv65zeIkrzBVtJt4ilnFM60qM';
+const ACCESS_TOKEN = '1687110196689342464-blVyKpkRBGZKMw9m5o5T1qyiPMU16z';
+const ACCESS_TOKEN_SECRET = '1t5cPfjdIJu76P1s2t6370sjF2iQCy07fjJbzyGu9l7U5';
 const FRONT_URL = 'https://tabuchiwelding-png.github.io/my-brain';
 const MY_ID = '1687110196689342464';
 
@@ -87,7 +87,6 @@ async function go(method, baseUrl, queryParams, body) {
     oauth_version: '1.0',
   };
 
-  // 署名ベース文字列: GETのクエリパラメータのみ含める（POSTのbodyは含めない）
   const allParams = method === 'GET'
     ? Object.assign({}, queryParams, oauthParams)
     : Object.assign({}, oauthParams);
@@ -106,7 +105,6 @@ async function go(method, baseUrl, queryParams, body) {
     .map(k => pct(k) + '="' + pct(oauthParams[k]) + '"')
     .join(', ');
 
-  // GETはURLにクエリパラメータを付ける
   let fetchUrl = baseUrl;
   if (method === 'GET' && Object.keys(queryParams).length > 0) {
     fetchUrl += '?' + Object.keys(queryParams)
@@ -126,7 +124,6 @@ async function go(method, baseUrl, queryParams, body) {
   return fetch(fetchUrl, options);
 }
 
-// RFC 3986 パーセントエンコード
 function pct(s) {
   return encodeURIComponent(String(s))
     .replace(/!/g, '%21')
