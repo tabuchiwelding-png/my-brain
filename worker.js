@@ -23,6 +23,11 @@ export default {
       return new Response(text, {headers: {...cors, 'Content-Type': 'application/json'}});
     }
 
+    if (path === '/debug') {
+      const result = await debugAuth('GET', 'https://api.twitter.com/2/users/me', {'user.fields': 'profile_image_url,username,name'});
+      return new Response(JSON.stringify(result, null, 2), {headers: {...cors, 'Content-Type': 'application/json'}});
+    }
+
     if (path === '/timeline') {
       const params = {
         'max_results': '20',
@@ -73,6 +78,45 @@ export default {
     return new Response('Not found', {status: 404, headers: cors});
   }
 };
+
+// デバッグ用: 署名生成の詳細を返す
+async function debugAuth(method, baseUrl, queryParams) {
+  queryParams = queryParams || {};
+  const oauthParams = {
+    oauth_consumer_key: CONSUMER_KEY,
+    oauth_nonce: nonce(),
+    oauth_signature_method: 'HMAC-SHA1',
+    oauth_timestamp: ts(),
+    oauth_token: ACCESS_TOKEN,
+    oauth_version: '1.0',
+  };
+  const allParams = method === 'GET'
+    ? Object.assign({}, queryParams, oauthParams)
+    : Object.assign({}, oauthParams);
+  const paramStr = Object.keys(allParams)
+    .sort()
+    .map(k => pct(k) + '=' + pct(allParams[k]))
+    .join('&');
+  const signatureBase = method + '&' + pct(baseUrl) + '&' + pct(paramStr);
+  const signingKey = pct(CONSUMER_SECRET) + '&' + pct(ACCESS_TOKEN_SECRET);
+  const signature = await sign(signingKey, signatureBase);
+  oauthParams.oauth_signature = signature;
+  const authHeader = 'OAuth ' + Object.keys(oauthParams)
+    .sort()
+    .map(k => pct(k) + '="' + pct(oauthParams[k]) + '"')
+    .join(', ');
+  return {
+    ck_len: CONSUMER_KEY.length,
+    cs_len: CONSUMER_SECRET.length,
+    at_len: ACCESS_TOKEN.length,
+    ats_len: ACCESS_TOKEN_SECRET.length,
+    ck_head: CONSUMER_KEY.slice(0, 4),
+    at_head: ACCESS_TOKEN.slice(0, 12),
+    signatureBase,
+    signature,
+    authHeader
+  };
+}
 
 // ===== OAuth 1.0a =====
 async function go(method, baseUrl, queryParams, body) {
