@@ -158,3 +158,4 @@ async function sign(key, msg) {
   let r = '';
   for (let i = 0; i < b.length; i++) r += String.fromCharCode(b[i]);
   return btoa(r);
+}
