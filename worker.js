@@ -1,7 +1,7 @@
-const CONSUMER_KEY = 'i6em3l0l0F73h7oldGlC3Dkje';
-const CONSUMER_SECRET = '6jCtM6CrkiLHSIVYZDfmbJQ1dq8sEzTLT5MgrpkWGZu0L1vf98';
-const ACCESS_TOKEN = '1687110196689342464-W5ZLcecrV1zYKlU673s5QuKflZ0I7Y';
-const ACCESS_TOKEN_SECRET = 'Mq8kBO1sZi1C0mqBmBdSJNj2Njpxvj11qz6OAw6ucmz6u';
+const CONSUMER_KEY = '1In69CircPBrOQEgasK6a4ItC';
+const CONSUMER_SECRET = '2ZREc3PXnLPbuB0MafFgPVtDqfvKwzz4QkmeMk2eeupW3S4RGr';
+const ACCESS_TOKEN = '1687110196689342464-PDYKa6IRQLq8r2w9BitgI5bb1GHXpI';
+const ACCESS_TOKEN_SECRET = 'fgjEBZnTLsmFDPabPYPQguPf1RbzGhI8NDk156zJnpToN';
 const FRONT_URL = 'https://tabuchiwelding-png.github.io/my-brain';
 const MY_ID = '1687110196689342464';
 
@@ -16,7 +16,6 @@ export default {
     };
     if (request.method === 'OPTIONS') return new Response(null, {headers: cors});
 
-    // /me の代わりに user_id を明示して取得（OAuth 1.0aでmeが弾かれる問題の回避）
     if (path === '/me') {
       const params = {'user.fields': 'profile_image_url,username,name'};
       const r = await go('GET', `https://api.twitter.com/2/users/${MY_ID}`, params);
